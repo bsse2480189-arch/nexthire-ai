@@ -1,0 +1,59 @@
+{
+  "name": "NextHire AI Design Tokens",
+  "theme": "dark",
+  "tokens": {
+    "colors": {
+      "primaryGradient": {
+        "from": "#4F46E5",
+        "via": "#8B5CF6",
+        "to": "#7C3AED"
+      },
+      "brandAccent": "#06B6D4",
+      "background": {
+        "dark": "#080A14",
+        "light": "#F9FAFB"
+      },
+      "glass": {
+        "border": "rgba(255, 255, 255, 0.08)",
+        "from": "rgba(255, 255, 255, 0.02)",
+        "to": "rgba(255, 255, 255, 0.06)",
+        "text": "#E6E0E9"
+      },
+      "surface": "#141218",
+      "onSurface": "#E6E0E9",
+      "onSurfaceVariant": "#CBC4D2"
+    },
+    "typography": {
+      "fontFamily": "Inter, system-ui, sans-serif",
+      "sizes": {
+        "h1": {
+          "desktop": "56px",
+          "mobile": "40px"
+        },
+        "h2": {
+          "desktop": "40px",
+          "mobile": "32px"
+        },
+        "h3": {
+          "desktop": "24px",
+          "mobile": "20px"
+        },
+        "body": "16px",
+        "small": "14px"
+      }
+    },
+    "radii": {
+      "card": "20px",
+      "button": "9999px",
+      "input": "12px"
+    },
+    "motion": {
+      "durations": {
+        "fast": "160ms",
+        "normal": "300ms",
+        "slow": "400ms"
+      },
+      "easing": "cubic-bezier(0.16, 1, 0.3, 1)"
+    }
+  }
+}

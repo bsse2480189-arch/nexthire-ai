@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#7C3AED" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="#080A14" />
+  <!-- Minimalist N shape representing NextHire AI -->
+  <path d="M30 70 V30 L55 58 L70 34 V70" fill="none" stroke="url(#glow)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="70" cy="34" r="6" fill="#06B6D4" />
+</svg>

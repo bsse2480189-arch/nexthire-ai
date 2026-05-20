@@ -1,0 +1,5 @@
+# Robots.txt for NextHire AI App
+User-agent: *
+Allow: /
+
+Sitemap: /sitemap.xml
