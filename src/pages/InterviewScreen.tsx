@@ -30,6 +30,13 @@ export const InterviewScreen: React.FC<InterviewScreenProps> = ({
   // Web Speech API for real-time live typing feedback!
   const recognitionRef = useRef<any>(null);
 
+  // Media recording refs for audio-to-audio (capture & upload)
+  const mediaRecorderRef = useRef<any>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
     // Dynamic load mock interview questions from server api using actual Gemini generation!
     fetch("/api/interview/start", {
@@ -117,17 +124,92 @@ export const InterviewScreen: React.FC<InterviewScreenProps> = ({
     }
   }, [isPaused, isRecording]);
 
+  // When current question changes, speak it using Web Speech synthesis (text-to-speech)
+  useEffect(() => {
+    const q = questions[currentIdx];
+    if (!q) return;
+
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(q.text);
+        // Optional voice selection and rate adjustments
+        utter.lang = 'en-US';
+        utter.rate = 1.0;
+        window.speechSynthesis.speak(utter);
+      }
+    } catch (e) {
+      console.warn('TTS failed for question playback:', e);
+    }
+  }, [currentIdx, questions]);
+
+  const startMediaRecording = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      const recorder = new (window as any).MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e: any) => {
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        try {
+          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const url = URL.createObjectURL(blob);
+          setRecordedAudioUrl(url);
+
+          // Upload to /api/upload-audio (mock endpoint)
+          try {
+            const form = new FormData();
+            form.append('file', blob, `recording_${Date.now()}.webm`);
+            const res = await fetch('/api/upload-audio', { method: 'POST', body: form });
+            const data = await res.json();
+            console.log('Audio uploaded:', data);
+          } catch (uErr) {
+            console.warn('Audio upload failed (server may be mock):', uErr);
+          }
+
+          // Stop all tracks
+          if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+            mediaStreamRef.current = null;
+          }
+        } catch (blobErr) {
+          console.error('Error finalizing audio recording:', blobErr);
+        }
+      };
+
+      recorder.start();
+    } catch (err) {
+      console.warn('Microphone access denied or unavailable:', err);
+    }
+  };
+
+  const stopMediaRecording = () => {
+    try {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+    } catch (e) {}
+  };
+
   const toggleRecording = () => {
     if (isRecording) {
       setIsRecording(false);
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch(e){}
       }
+      stopMediaRecording();
     } else {
       setIsRecording(true);
       if (recognitionRef.current) {
         try { recognitionRef.current.start(); } catch(e){}
       }
+      startMediaRecording();
     }
   };
 
@@ -262,7 +344,7 @@ export const InterviewScreen: React.FC<InterviewScreenProps> = ({
               isRecording && !isPaused ? "border-brand-accent animate-pulse-ring" : "border-white/20"
             }`}>
               <img 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnzaS8fq-I4oNcI45ZSpE4rx7OTCjsaD3csUc9tUi04OsE6SUmaR3Jb197DX803SydAeIgMjBBCqKSJHI-rm9ltRGOxoKKBhLcFlGT3knvcsX7QdM7IIITsuKn7sYqnOhryBT_vOO8Um1iZ6yfCDJyQU1MD5S6CaMkEmNtalpvTgJ5DmJexLKH0dzmMRWkQYdcEjs_ok1BXecjRzUpP4qzVkzvmh-ODAjUmbcMb6j6NwVAGcf-54rAm74VWNTYVyzePuVazWEKTYe7" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnzaS8fq-I4oNcI45ZSpE4rx7OTCjsaD3csUc9tUi04OsE6SUmaR3Jb197DX803SydAeIgMjBBCqKSJHI-rm9ltRGOxoKKBhLcFlGT3knvcsX7QdM7IIITsuKn[...]
                 alt="AI Recruiter" 
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover" 
@@ -348,6 +430,13 @@ export const InterviewScreen: React.FC<InterviewScreenProps> = ({
                 />
               ))}
             </div>
+          </div>
+
+          {/* Small audio playback for recorded candidate audio */}
+          <div className="w-full max-w-xl mt-3 text-left">
+            {recordedAudioUrl && (
+              <audio ref={(el) => (audioPlayerRef.current = el)} controls src={recordedAudioUrl} className="w-full rounded bg-black/20" />
+            )}
           </div>
         </GlassCard>
 
